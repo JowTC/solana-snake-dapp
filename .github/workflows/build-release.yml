@@ -1,0 +1,69 @@
+name: Build Release APK (dApp Store)
+
+# Triggers when you push a version tag like v1.0.0
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: EAS dApp Store Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Bump versionCode from tag
+        # Converts tag v1.2.3 → versionCode 10203
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          MAJOR=$(echo $TAG | cut -d. -f1)
+          MINOR=$(echo $TAG | cut -d. -f2)
+          PATCH=$(echo $TAG | cut -d. -f3)
+          VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          echo "Setting versionCode to $VERSION_CODE"
+          # Use jq to update app.json in-place
+          jq --argjson vc "$VERSION_CODE" \
+             --arg vn "$TAG" \
+             '.expo.android.versionCode = $vc | .expo.version = $vn' \
+             app.json > app.json.tmp && mv app.json.tmp app.json
+
+      - name: Build release APK for Solana dApp Store
+        run: eas build --platform android --profile dapp-store --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Solana Snake ${{ github.ref_name }}"
+          body: |
+            ## Solana Snake ${{ github.ref_name }}
+
+            Release APK built via EAS for the Solana dApp Store.
+
+            ### Download
+            Get the signed APK from the [Expo dashboard](https://expo.dev) → Builds.
+
+            ### Verify signing
+            ```bash
+            apksigner verify --print-certs solana-snake.apk
+            ```
+          draft: false
+          prerelease: false
