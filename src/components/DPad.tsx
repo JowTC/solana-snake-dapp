@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Direction, COLORS } from '../game/constants';
 
@@ -6,22 +6,30 @@ interface Props {
   onPress: (dir: Direction) => void;
 }
 
+const DEBOUNCE_MS = 80; // ignore taps faster than one tick
+
 export function DPad({ onPress }: Props) {
+  const lastPress = useRef(0);
+
+  const handlePress = (dir: Direction) => {
+    const now = Date.now();
+    if (now - lastPress.current < DEBOUNCE_MS) return;
+    lastPress.current = now;
+    onPress(dir);
+  };
+
   return (
     <View style={styles.container}>
-      {/* UP */}
       <View style={styles.row}>
-        <DPadButton label="▲" onPress={() => onPress('UP')} />
+        <DPadButton label="▲" onPress={() => handlePress('UP')} />
       </View>
-      {/* LEFT / CENTER / RIGHT */}
       <View style={styles.row}>
-        <DPadButton label="◀" onPress={() => onPress('LEFT')} />
+        <DPadButton label="◀" onPress={() => handlePress('LEFT')} />
         <View style={styles.center} />
-        <DPadButton label="▶" onPress={() => onPress('RIGHT')} />
+        <DPadButton label="▶" onPress={() => handlePress('RIGHT')} />
       </View>
-      {/* DOWN */}
       <View style={styles.row}>
-        <DPadButton label="▼" onPress={() => onPress('DOWN')} />
+        <DPadButton label="▼" onPress={() => handlePress('DOWN')} />
       </View>
     </View>
   );
@@ -32,7 +40,7 @@ function DPadButton({ label, onPress }: { label: string; onPress: () => void }) 
     <TouchableOpacity
       style={styles.button}
       onPress={onPress}
-      activeOpacity={0.6}
+      activeOpacity={0.5}
       accessibilityRole="button"
       accessibilityLabel={`Move ${label}`}
     >
