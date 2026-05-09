@@ -1,7 +1,5 @@
-import 'react-native-get-random-values';
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
-
+// Polyfills are handled in index.js (the custom entrypoint)
+// See: https://docs.solanamobile.com/react-native/expo#step-3---update-appjs-with-polyfills
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
