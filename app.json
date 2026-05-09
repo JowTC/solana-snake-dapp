@@ -35,8 +35,9 @@
     "scheme": "solana-snake",
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "edbbfa64-f785-45fd-95cf-29d5c8d7fb64"
       }
-    }
+    },
+    "owner": "whenfaa"
   }
 }
